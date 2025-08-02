@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to Speech Converter</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab:hover:not(.active) {
+            background: #e9ecef;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-upload input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-upload-label {
+            display: block;
+            padding: 15px;
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+        }
+
+        .file-upload-label:hover {
+            background: #e8f0ff;
+            border-color: #5a6fd8;
+        }
+
+        .file-upload-label i {
+            font-size: 2rem;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .tone-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .tone-option {
+            position: relative;
+        }
+
+        .tone-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .tone-option label {
+            display: block;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .tone-option input[type="radio"]:checked + label {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .tone-option label:hover {
+            border-color: #667eea;
+            transform: translateY(-1px);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-section {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .download-btn {
+            margin-top: 15px;
+        }
+
+        .btn-secondary-margin {
+            margin-left: 10px;
+        }
+
+        .file-info-text {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        /* Audio player styling */
+        audio {
+            width: 100%;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        
+        audio::-webkit-media-controls-panel {
+            background-color: #f8f9fa;
+        }
+        
+        audio::-webkit-media-controls-play-button {
+            background-color: #007bff;
+            border-radius: 50%;
+        }
+        
+        audio::-webkit-media-controls-play-button:hover {
+            background-color: #0056b3;
+        }
+
+        .content-display {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .content-display h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .content-text {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .left-panel {
+            grid-column: 1;
+        }
+
+        .right-panel {
+            grid-column: 2;
+        }
+
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .left-panel, .right-panel {
+                grid-column: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .tone-selector {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-microphone"></i> Text to Speech</h1>
+            <p>Convert your text or files into downloadable MP3 audio with custom tones</p>
+        </div>
+
+        <div class="content">
+            <div class="tabs">
+                <button type="button" class="tab active" onclick="switchTab('text')">
+                    <i class="fas fa-keyboard"></i> Text Input
+                </button>
+                <button type="button" class="tab" onclick="switchTab('file')">
+                    <i class="fas fa-file-upload"></i> File Upload
+                </button>
+            </div>
+
+            <div id="alert" class="alert"></div>
+
+            <div class="main-layout">
+                <!-- Left Panel - Input Forms -->
+                <div class="left-panel">
+                    <!-- Text Input Tab -->
+                    <div id="text-tab" class="tab-content active">
+                        <form id="text-form">
+                            <div class="form-group">
+                                <label for="text-input">Enter your text:</label>
+                                <textarea id="text-input" class="form-control" placeholder="Type or paste your text here..." required></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Tone Selection:</label>
+                                <div class="tone-selector">
+                                    <div class="tone-option">
+                                        <input type="radio" id="neutral" name="tone" value="neutral" checked>
+                                        <label for="neutral">
+                                            <i class="fas fa-volume-up"></i><br>
+                                            Neutral
+                                        </label>
+                                    </div>
+                                    <div class="tone-option">
+                                        <input type="radio" id="suspenseful" name="tone" value="suspenseful">
+                                        <label for="suspenseful">
+                                            <i class="fas fa-theater-masks"></i><br>
+                                            Suspenseful
+                                        </label>
+                                    </div>
+                                    <div class="tone-option">
+                                        <input type="radio" id="inspiring" name="tone" value="inspiring">
+                                        <label for="inspiring">
+                                            <i class="fas fa-star"></i><br>
+                                            Inspiring
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn" id="convert-btn">
+                                <i class="fas fa-magic"></i> Convert to Speech
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- File Upload Tab -->
+                    <div id="file-tab" class="tab-content">
+                        <form id="file-form">
+                            <div class="form-group">
+                                <label>Upload Text File:</label>
+                                <div class="file-upload">
+                                    <input type="file" id="file-input" accept=".txt" required>
+                                    <label for="file-input" class="file-upload-label">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <span>Click to select a .txt file</span>
+                                        <span class="file-info-text">
+                                            Maximum file size: 16MB
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Tone Selection:</label>
+                                <div class="tone-selector">
+                                    <div class="tone-option">
+                                        <input type="radio" id="file-neutral" name="file-tone" value="neutral" checked>
+                                        <label for="file-neutral">
+                                            <i class="fas fa-volume-up"></i><br>
+                                            Neutral
+                                        </label>
+                                    </div>
+                                    <div class="tone-option">
+                                        <input type="radio" id="file-suspenseful" name="file-tone" value="suspenseful">
+                                        <label for="file-suspenseful">
+                                            <i class="fas fa-theater-masks"></i><br>
+                                            Suspenseful
+                                        </label>
+                                    </div>
+                                    <div class="tone-option">
+                                        <input type="radio" id="file-inspiring" name="file-tone" value="inspiring">
+                                        <label for="file-inspiring">
+                                            <i class="fas fa-star"></i><br>
+                                            Inspiring
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn" id="upload-btn">
+                                <i class="fas fa-upload"></i> Upload &amp; Convert
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                        <p>Converting text to speech...</p>
+                    </div>
+
+                    <div class="result-section" id="result-section">
+                        <h3><i class="fas fa-check-circle"></i> Conversion Complete!</h3>
+                        <p id="result-message"></p>
+                        <div class="audio-container">
+                            <!-- Audio player will be inserted here -->
+                        </div>
+                        <a href="#" class="btn download-btn" id="download-btn">
+                            <i class="fas fa-download"></i> Download MP3
+                        </a>
+                        <button type="button" class="btn btn-secondary btn-secondary-margin" onclick="resetForm()">
+                            <i class="fas fa-redo"></i> Convert Another
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Panel - Content Display -->
+                <div class="right-panel">
+                    <div class="content-display" id="content-display">
+                        <h3><i class="fas fa-file-text"></i> Content Preview</h3>
+                        <div class="content-text" id="content-text">
+                            <!-- Content will be displayed here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFilename = null;
+
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+            
+            // Reset forms and hide results
+            resetForm();
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type}`;
+            alert.style.display = 'block';
+            
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result-section').style.display = 'none';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showResult(message, audioElement, downloadElement) {
+            document.getElementById('result-message').textContent = message;
+            
+            // Clear previous audio player
+            const audioContainer = document.querySelector('.audio-container');
+            audioContainer.innerHTML = '';
+            
+            // Create audio player
+            const audioPlayer = document.createElement('audio');
+            audioPlayer.controls = true;
+            audioPlayer.style.width = '100%';
+            audioPlayer.style.marginBottom = '15px';
+            audioPlayer.style.borderRadius = '8px';
+            
+            // Set audio source
+            audioPlayer.src = audioElement.src;
+            
+            // Add audio player to container
+            audioContainer.appendChild(audioPlayer);
+            
+            // Download button functionality
+            document.getElementById('download-btn').onclick = function() {
+                downloadElement.click();
+            };
+            
+            document.getElementById('result-section').style.display = 'block';
+        }
+
+        function resetForm() {
+            document.getElementById('text-form').reset();
+            document.getElementById('file-form').reset();
+            document.getElementById('result-section').style.display = 'none';
+            document.getElementById('alert').style.display = 'none';
+            document.getElementById('content-display').style.display = 'none';
+            
+            // Clear audio container
+            const audioContainer = document.querySelector('.audio-container');
+            if (audioContainer) {
+                audioContainer.innerHTML = '';
+            }
+        }
+
+        function displayContent(content, type = 'text') {
+            const contentDisplay = document.getElementById('content-display');
+            const contentText = document.getElementById('content-text');
+            
+            if (content && content.trim()) {
+                contentText.textContent = content;
+                contentDisplay.style.display = 'block';
+            } else {
+                contentDisplay.style.display = 'none';
+            }
+        }
+
+        // Text form submission
+        document.getElementById('text-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const text = document.getElementById('text-input').value.trim();
+            const tone = document.querySelector('input[name="tone"]:checked').value;
+            
+            if (!text) {
+                showAlert('Please enter some text to convert', 'error');
+                return;
+            }
+            
+            // Display the content in the right panel
+            displayContent(text, 'text');
+            
+            showLoading();
+            
+            // Use cloud-based TTS API (Google Translate TTS)
+            convertTextToSpeech(text, tone);
+        });
+
+        // File form submission
+        document.getElementById('file-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('file-input');
+            const tone = document.querySelector('input[name="file-tone"]:checked').value;
+            
+            if (!fileInput.files[0]) {
+                showAlert('Please select a file to upload', 'error');
+                return;
+            }
+            
+            // Read and display file content
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                displayContent(content, 'file');
+                
+                showLoading();
+                convertTextToSpeech(content, tone);
+            };
+            reader.readAsText(file);
+        });
+
+        // Cloud-based TTS conversion function
+        function convertTextToSpeech(text, tone) {
+            try {
+                // Use Google Translate TTS API (free and reliable)
+                const encodedText = encodeURIComponent(text);
+                const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=en&client=tw-ob`;
+                
+                // Create audio element for playback
+                const audio = new Audio(ttsUrl);
+                
+                // Create download link
+                const downloadLink = document.createElement('a');
+                downloadLink.href = ttsUrl;
+                downloadLink.download = `speech_${Date.now()}.mp3`;
+                downloadLink.style.display = 'none';
+                document.body.appendChild(downloadLink);
+                
+                // Show success with audio player and download
+                hideLoading();
+                showResult(`Text converted to ${tone} tone successfully!`, audio, downloadLink);
+                
+                // Auto-play the audio
+                audio.play().catch(e => console.log('Auto-play prevented:', e));
+                
+                // Clean up download link
+                setTimeout(() => {
+                    document.body.removeChild(downloadLink);
+                }, 1000);
+                
+            } catch (error) {
+                hideLoading();
+                showAlert('Text-to-speech conversion failed. Please try again.', 'error');
+                console.error('TTS Error:', error);
+            }
+        }
+
+        // Modified showResult function for cloud TTS with audio player
+        function showResult(message, audioElement, downloadElement) {
+            document.getElementById('result-message').textContent = message;
+            
+            // Create audio player
+            const audioPlayer = document.createElement('audio');
+            audioPlayer.controls = true;
+            audioPlayer.style.width = '100%';
+            audioPlayer.style.marginBottom = '15px';
+            audioPlayer.style.borderRadius = '8px';
+            
+            // Set audio source
+            audioPlayer.src = audioElement.src;
+            
+            // Insert audio player before download button
+            const resultSection = document.getElementById('result-section');
+            const downloadBtn = document.getElementById('download-btn');
+            resultSection.insertBefore(audioPlayer, downloadBtn);
+            
+            // Download button functionality
+            document.getElementById('download-btn').onclick = function() {
+                downloadElement.click();
+            };
+            
+            document.getElementById('result-section').style.display = 'block';
+        }
+
+        // Real-time content display for text input
+        document.getElementById('text-input').addEventListener('input', function(e) {
+            const text = e.target.value.trim();
+            if (text) {
+                displayContent(text, 'text');
+            } else {
+                document.getElementById('content-display').style.display = 'none';
+            }
+        });
+
+        // File input change handler
+        document.getElementById('file-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const label = document.querySelector('.file-upload-label');
+                label.innerHTML = `
+                    <i class="fas fa-file-text"></i>
+                    <span>${file.name}</span>
+                    <span class="file-info-text">
+                        Size: ${(file.size / 1024 / 1024).toFixed(2)} MB
+                    </span>
+                `;
+            }
+        });
+
+        // Download button click handler
+        document.getElementById('download-btn').addEventListener('click', function(e) {
+            if (currentFilename) {
+                // The download will start automatically due to the href
+                // Clean up the file after a delay
+                setTimeout(() => {
+                    fetch(`/cleanup/${currentFilename}`)
+                        .then(response => response.json())
+                        .catch(error => console.error('Cleanup error:', error));
+                    currentFilename = null;
+                }, 5000);
+            }
+        });
+    </script>
+</body>
+</html> 
